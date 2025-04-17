@@ -1,4 +1,3 @@
-# mypy: disable-error-code="no-untyped-call,no-untyped-def"
 import os
 from typing import List, NamedTuple, Optional, Tuple, Union
 
@@ -12,7 +11,10 @@ from strictdoc.backend.sdoc.models.document_grammar import (
 from strictdoc.backend.sdoc.models.node import SDocNode, SDocNodeField
 from strictdoc.backend.sdoc.models.object_factory import SDocObjectFactory
 from strictdoc.backend.sdoc.models.reference import ParentReqReference
-from strictdoc.backend.sdoc.models.type_system import GrammarElementFieldString
+from strictdoc.backend.sdoc.models.type_system import (
+    GrammarElementFieldString,
+    RequirementFieldName,
+)
 from strictdoc.helpers.string import ensure_newline
 
 
@@ -136,7 +138,15 @@ class ExcelToSDocConverter:
             .fields
         )
 
-        for _, name in extra_header_pairs:
+        requirement_field_values = {
+            value
+            for key, value in vars(RequirementFieldName).items()
+            if not key.startswith("__")
+        }
+        print(requirement_field_values)
+        for index, name in extra_header_pairs:
+            if name in requirement_field_values:
+                continue
             fields.extend(
                 [
                     GrammarElementFieldString(
@@ -202,8 +212,8 @@ class ExcelToSDocConverter:
                     SDocNodeField.create_from_string(
                         parent=None,
                         field_name=name,
-                        field_value=ensure_newline(value),
-                        multiline=True,
+                        field_value=value,
+                        multiline=False,
                     )
                 ]
         if parent_uid is not None:
